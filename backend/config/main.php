@@ -11,14 +11,23 @@ return [
     'basePath' => dirname(__DIR__),
     'controllerNamespace' => 'backend\controllers',
     'bootstrap' => ['log'],
-    'modules' => [],
+    'language'=>'ru-RU',
+    'modules' => [
+        'profiles' => [
+            'class' => 'backend\modules\profiles\Module',
+        ],
+    ],
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-backend',
+            'parsers'=>[
+                'application/json'=>\yii\web\JsonParser::class
+            ]
         ],
         'user' => [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
+//            'enableSession' => false,
             'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true],
         ],
         'session' => [
@@ -42,6 +51,9 @@ return [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'profile/<action>'=>'profiles/profile/<action>',
+                ['class'=>\yii\rest\UrlRule::class,'controller'=>'activity',
+                'pluralize'=>false]
             ],
         ],
 
