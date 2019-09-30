@@ -18,6 +18,8 @@ class Profile
     private $auth_token;
     private $createdAt;
 
+
+    public const CREATE_PROFILE = 'create_profile';
     /**
      * Profile constructor.
      * @param $uuid

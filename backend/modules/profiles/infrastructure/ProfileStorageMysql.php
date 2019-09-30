@@ -66,8 +66,9 @@ class ProfileStorageMysql implements ProfileStorage
     {
         $query = new Query();
         $data= $query->from('user')
-                     ->andWhere([
-                         'username' =>$username,
+                     ->orWhere([
+                         'username' =>$username
+                     ])->orWhere([
                          'email' => $email
                      ])
                      ->one();
