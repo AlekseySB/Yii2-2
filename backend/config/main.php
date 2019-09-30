@@ -1,4 +1,10 @@
 <?php
+
+use common\components\logger\Logger;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use yii\di\Instance;
+
 $params = array_merge(
     require __DIR__ . '/../../common/config/params.php',
     require __DIR__ . '/../../common/config/params-local.php',
@@ -10,15 +16,46 @@ return [
     'id' => 'app-backend',
     'basePath' => dirname(__DIR__),
     'controllerNamespace' => 'backend\controllers',
-    'bootstrap' => ['log'],
-    'modules' => [],
+    'bootstrap' => ['log', \backend\config\PreConfig::class],
+    'language'=>'ru-RU',
+    'modules' => [
+        'profiles' => [
+            'class' => 'backend\modules\profiles\Module',
+        ],
+    ],
+    'container'=>[
+        'singletons'=>[
+            \backend\modules\profiles\services\contracts\ProfileStorage::class=>[
+                ['class'=>\backend\modules\profiles\infrastructure\ProfileStorageMysql::class],
+                [Instance::of('db_conn')]
+                ],
+            'db_conn'=>function(){
+
+                return Yii::$app->db;
+            },
+            \backend\modules\profiles\services\contracts\ProfileService::class=>['class'=>\backend\modules\profiles\services\ProfileService::class],
+            Logger::class=>[
+                ['class'=>\backend\modules\profiles\services\logger\LoggerProfile::class],
+                [Instance::of('mailer')]
+            ],
+            'mailer'=>function(){
+
+                return Yii::$app->mailer;
+            },
+            EventDispatcherInterface::class=>['class'=>EventDispatcher::class]
+        ]
+    ],
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-backend',
+            'parsers'=>[
+                'application/json'=>\yii\web\JsonParser::class
+            ]
         ],
         'user' => [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
+//            'enableSession' => false,
             'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true],
         ],
         'session' => [
@@ -42,6 +79,9 @@ return [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'profile/<action>'=>'profiles/profile/<action>',
+                ['class'=>\yii\rest\UrlRule::class,'controller'=>'activity',
+                'pluralize'=>false]
             ],
         ],
 
